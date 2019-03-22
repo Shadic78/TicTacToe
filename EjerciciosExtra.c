@@ -1,52 +1,42 @@
-/*Hacer un juego de gato, donde la m�quina c�lcula todas las posibles soluciones, y coloca un movimiento
-despu�s de determinar la mejor posibilidad de ganar, se usar� �rbol, y la computador� tendr� una estrategia para ganar*/
-
-/*
-Autor:Eyder Concha Moreno 09/Marzo/19
-Entradas: Una posici�n en columnas y filas del 1 al 3
-Salida: una tabla con la jugada de la IA
-Procedimiento general:
--Se pregunta al jugador donde desea hacer un movimiento
--Se verifica si el lugar elegido es v�lido (no est� ocupado en la tabla)
--Se coloca en la tabla
--La IA encuentra los espacios vac�os en la tabla y coloca un movimiento en cada uno de ellos
--En cada movimiento realizado, se verifica cada uno de los siguientes posibles movimientos, para realizar esto se hace lo siguiente:
-  *Se verifica si la simulaci�n a terminado, de hacerlo se revisa si el ganador es el jugador, o la m�quina
-      -De ser la m�quina, el �rbol devuelve 10 puntos menos la profundidad, esto para garantizar que haga el movimiento m�s cercano a ganar
-      -De ser el jugador, el �rbol devuelve 10 puntos m�ss la profundidad, esto por si es de perder, retrase su derrota lo m�ximo posible
-      -De no haber terminado, retorna 0
-  *Se determina si el juego ha terminado en empate, de terminar en empate se retorna un 0
-  *Se determina si el turno a simular es del jugador, o de la m�quina, se realiza lo siguiente:
-      -De ser de la m�quina, se toma como referencia un valor de -100, se buscan los espacios vacios, y se reemplazan con un movimiento de la m�quina.
-        Este movimiento se pasa a la misma funci�n, comparando el valor que esta funci�n ha de retornar con la misma variable de la probabilidad mayor.
-
-      -De ser del Jugador, se toma como referencia un valor de 100, se buscan los espacios vacios, y se reemplazan con un movimiento de la m�quina.
-        Este movimiento se pasa a la misma funci�n, comparando el valor que esta funci�n ha de retornar con la misma variable de la probabilidad mayor.
-  *Se retorna el valor encontrado por cada funcion, de esta manera recursivamente se verifican todas las posibles jugadas a realizar por la m�quina o el jugador
--El algoritmo retorna un valor, este valor representando las probabilidades de ganar en cada movimiento, siendo estas negativas (si ha de perder), o positivas (si ha de ganar)
--Se determina que espacio vac�o cuenta con la mayor probabilidad de ganar, se almacena la columna, y fila de su posicion
--Se realiza el movimiento por la maquina
--Se imprime el tablero
--Se repite hasta el fin del juego
-*/
+/**
+ * @file EjerciciosExtra.c
+ * @author Eyder Concha
+ * @date 21 Marzo 2019
+ * @brief Un juego de gato, con IA creada utilizando recursividad
+ *
+ */
 
 #include <stdio.h>
 
 // Definimos para utilizar en algoritmo Minimax
+//!Operación a utilizar para determinar resultado mínimo
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+//!Operación a utilizar para determinar resultado máximo
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 
+//funciones
+//!La función que comienza el juego 
 void jugar(int);
+//!La función que comienza la modalidad de "simulación"
 void simular();
+//!La función que imprime la tabla de juego
 void imprimirTabla(char[][3]);
+//!La función que valida y realiza el movimiento del jugador
 void movimientoJugador(char[][3]);
+//!La función que determina el mejor movimiento a realizar
 int movimientoIdeal(char[][3], int, int, int*);
+//!La función que determina el mejor movimiento en la simulacion
 int movimientoSimulado(char[][3], int, int);
+//!La función que coloca un movimiento
 void colocarMovimiento(char[][3], int, int, char);
+//!La función que determina si se ha ganado o perdido la partida en algun movimiento
 int determinaPuntuacion(char[][3]);
-void turnoMaquina(char[][3]);
-void turnoSimulado(char[][3]);
+//!La función que determina si el juego ha terminado en empate
 int esEmpate(char[][3]);
+//!La función que determina el mejor movimiento a realizar en la siguiente posición por la máquina
+void turnoMaquina(char[][3]);
+//!La función que determina el mejor movimiento a realizar en la siguiente posición por la máquina en el juego simulado
+void turnoSimulado(char[][3]);
 
 int main(){
 
@@ -57,6 +47,12 @@ int main(){
     
 }
 
+/*!
+    La funcion que inicializa el juego. Recibe un valor binario.
+    Pregunta al usuario por la casilla donde desea jugar, valida el movimiento, y lo coloca como simulacion si el valor binario es 1
+    o como juego si el valor binario es 0.
+    @param esSimulacion Un valor binario que representa la modalidad a jugar
+*/
 void jugar(int esSimulacion){
     // Definimos el espacio de juego como una tabla de 3x3    
     char tabla[3][3];
@@ -91,7 +87,11 @@ void jugar(int esSimulacion){
     }
 }
 
-
+/*!
+    La funcion que Imprime la tabla. Recibe una matriz.
+    Imprime la tabla de juego, con sus respectivos valores    
+    @param tabla El espacio de juego a imprimir
+*/
 void imprimirTabla(char tabla[][3]){
     int columnas = 0;
     int filas = 0;
@@ -111,7 +111,11 @@ void imprimirTabla(char tabla[][3]){
     printf("\n");
 }
 
-
+/*!
+    La funcion que Imprime la tabla. Recibe una matriz.
+    Imprime la tabla de juego, con sus respectivos valores    
+    @param tabla El espacio de juego a imprimir
+*/
 void movimientoJugador(char tabla[][3]){
     int movimientoColumna = 0, movimientoFila = 0, esValido = 0;
 
@@ -135,13 +139,26 @@ void movimientoJugador(char tabla[][3]){
     colocarMovimiento(tabla, movimientoColumna, movimientoFila, 'x');
 }
 
-// Esta funcion coloca el movimiento realizado por el jugador
+/*!
+    La funcion coloca un movimiento en un espacio de la tabla.
+    Recibe la tabla, la columna, la fila y el caracter a colocar. 
+    @param tabla El espacio de juego a imprimir
+    @param columna La columna donde el movimiento debará ir
+    @param fila La fila donde el movimiento debará ir
+    @param movimiento El caracter donde el movmiento deberá ir
+*/
 void colocarMovimiento(char tabla[][3], int columna, int fila, char movimiento){
     tabla[columna][fila] = movimiento;
 }
 
 ///////////////////////* Juego Simulado *///////////////////////////////
 
+/*!
+    La función encargada de determinar el mejor movimiento en una jugada simulada.
+    Determina la puntuacion a partir de un movimiento de la maquina,y elige la jugada con el mejor movimiento.
+    Coloca el mejor movimiento en la posición donde se encontró    
+    @param tabla La tabla donde se han de evaluar los movimientos
+*/
 void turnoSimulado(char tabla[][3]){
     // Determinamos una puntuacion, esta sera reemplazada por los movimientos probados por la maquina
     int maximaPuntuacion = -100, filaIdeal, columnaIdeal, puntuacion = 0;
@@ -160,6 +177,7 @@ void turnoSimulado(char tabla[][3]){
                     columnaIdeal = columnas;
                 }                                
                 // Volvemos a vaciar el espacio, para probar otro movimiento
+                printf("\nSimulación a partir de columna %d fila %d ha terminado\n", (columnas+1), (filas+1));
                 tabla[columnas][filas] = '_';
             }
         }
@@ -169,6 +187,18 @@ void turnoSimulado(char tabla[][3]){
     colocarMovimiento(tabla, columnaIdeal, filaIdeal, 'o');
 }
 
+/*!
+    La función encargada de determinar la puntuacion apartir de un movimiento en juego simulado.
+    Determina si el juego ha terminado, si ha ganado la maquina, el usuario, o terminó en empate.
+    Retorna una puntuación según el resultado final, el cual se ve afectado por la profundidad de la jugada.
+    Verifica si es turno de la maquina, de ser turno de la máquina simula un movimiento del jugador y lo imprime
+    buscando la mayor puntuación, la cual es retornada.
+    Si es turno del jugador, simula un movimiento de la máquina, lo imprime y busca la menor puntuación.
+    @param tabla La tabla donde se han de evaluar los movimientos
+    @param esTurnoMaquina Valor binario que representa el turno de la maquina o del jugador
+    @param profundidad Determina la profundidad del movimiento a simular
+    @return retorna un entero con la puntuación del movimiento
+*/
 int movimientoSimulado(char tabla[][3], int esTurnoMaquina, int profundidad){
     // Determinamos si el juego ha terminado, si gana la maquina, determinamos 10 puntos, si gana el jugador, -10
     int puntuacion = determinaPuntuacion(tabla);
@@ -234,6 +264,14 @@ int movimientoSimulado(char tabla[][3], int esTurnoMaquina, int profundidad){
 
 ///////////////////////////////////////////////////////////////////////////////////7
 
+
+/*!
+    La función encargada de determinar el mejor movimiento en una jugada.
+    Determina la puntuacion a partir de un movimiento de la maquina, y elige la jugada con el mejor movimiento.
+    Coloca el mejor movimiento en la posición donde se encontró
+    Imprime las simulaciones totales realizadas.
+    @param tabla La tabla donde se han de evaluar los movimientos
+*/
 void turnoMaquina(char tabla[][3]){
     // Determinamos una puntuacion, esta sera reemplazada por los movimientos probados por la maquina
     int maximaPuntuacion = -100, simulaciones = 0, simulacionesTotales = 0, filaIdeal, columnaIdeal;
@@ -261,6 +299,20 @@ void turnoMaquina(char tabla[][3]){
     colocarMovimiento(tabla, columnaIdeal, filaIdeal, 'o');
 }
 
+/*!
+    La función encargada de determinar la puntuacion apartir de un movimiento
+    Determina si el juego ha terminado, si ha ganado la maquina, el usuario, o terminó en empate.
+    Retorna una puntuación según el resultado final, el cual se ve afectado por la profundidad de la jugada.
+    Verifica si es turno de la maquina, de ser turno de la máquina simula un movimiento del jugador
+    buscando la mayor puntuación, la cual es retornada.
+    Si es turno del jugador, simula un movimiento de la máquina y busca la menor puntuación.
+    Al simular un turno, se le agrega uno a la variable "simulaciones", la cual determina la cantidad de jugadas simuladas
+    @param tabla La tabla donde se han de evaluar los movimientos
+    @param esTurnoMaquina Valor binario que representa el turno de la maquina o del jugador
+    @param profundidad Determina la profundidad del movimiento a simular
+    @param simulaciones Determina el total de las jugadas simuladas
+    @return Un entero con la puntuación del movimiento
+*/
 int movimientoIdeal(char tabla[][3], int esTurnoMaquina, int profundidad, int* simulaciones){
     // Determinamos si el juego ha terminado, si gana la maquina, determinamos 10 puntos, si gana el jugador, -10
     int puntuacion = determinaPuntuacion(tabla);
@@ -317,7 +369,12 @@ int movimientoIdeal(char tabla[][3], int esTurnoMaquina, int profundidad, int* s
     }
 }
 
-
+/*!
+    La función encargada de determinar si el juego ha terminado en empate.
+    De estar lleno el espacio de juego, retorna una valor binario con valor de 1, de otra forma la retorna con 0.
+    @param tabla La tabla donde se han de evaluar las posiciones
+    @return Un entero representando si es empate o no
+*/
 int esEmpate(char tabla[][3]){
     int empataron = 1;
     // Determinamos si la tabla y sus movimientos resultan un empate
@@ -332,6 +389,14 @@ int esEmpate(char tabla[][3]){
     return empataron;
 }
 
+/*!
+    La función encargada de determinar si el juego ha terminado en una victoria para la máquina o el jugador.
+    De estar llena una fila, columna o diagonal con los mismos valores, determina si son "o" o "x", de ser
+    "o" implica que el ganador esla maquina, por lo que retorna una puntuación positiva, de ser "x" implica que el jugador ganó,
+    por lo tanto retorna una puntuación negativa.
+    @param tabla La tabla donde se han de evaluar las posiciones
+    @return un entero representando la puntuación del juego
+*/
 int determinaPuntuacion(char tabla[][3]) {
     int puntuacion = 0;
     // Comprobamos de izquierda a derecha
@@ -370,10 +435,4 @@ int determinaPuntuacion(char tabla[][3]) {
     // Retornamos una puntuacion representando quien gano
     return puntuacion;
 }
-
-
-
-
-
-
 
