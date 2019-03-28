@@ -1,0 +1,24 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+/* ==========================================================================
+   Estilos de los botones
+   ========================================================================== */
+button {
+  box-sizing: border-box;
+  font-size: 18px;
+  font-family: Calibri, arial, sans-serif;
+  width: 15%;
+  min-width: 170px;
+  padding: 10px 15px;
+  background: rgb(212, 21, 66);
+  color: white;
+  border: none;
+}
+
+button:hover {
+  background: rgb(170, 17, 53);
+  cursor: pointer;
+}
